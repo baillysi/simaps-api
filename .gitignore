@@ -1,0 +1,8 @@
+*.code-workspace
+.*
+__pycache__
+*.pyc
+!.gitignore
+conf/dev*
+!conf/dev.env.sample
+/temp
