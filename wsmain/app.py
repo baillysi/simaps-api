@@ -1,6 +1,7 @@
 # This is a sample Python script.
 
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from model.host import Host
 from model.hike import Hike
 from model.base import Session
@@ -8,6 +9,7 @@ from model.base import Session
 session = Session()
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/hosts')

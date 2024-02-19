@@ -13,8 +13,10 @@ user = config.get('DB_USER')
 password = config.get('DB_PASSWORD')
 database = config.get('DB_DATABASE')
 port = config.get('DB_PORT')
+schema = config.get('DB_SCHEMA')
 
-engine = create_engine(f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}")
+engine = create_engine(f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{database}"
+                       f"?options=-c%20search_path={schema}")
 Session = sessionmaker(bind=engine)
 
 Base = declarative_base()
