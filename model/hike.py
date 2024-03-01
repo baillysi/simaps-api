@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from sqlalchemy import String, Integer, Date, Column
+from sqlalchemy import String, Integer, Date, Column, ForeignKey
 from sqlalchemy.orm import relationship
 from model.base import Base, hosts_hikes_association
 import datetime as dt
@@ -16,5 +16,15 @@ class Hike(Base):
     distance: int = Column(Integer)
     created_at = Column(Date, default=dt.datetime.now())
 
-    hosts = relationship("Host", secondary=hosts_hikes_association, back_populates='hikes')
+    zone_id = Column(Integer, ForeignKey('zones.id'), unique=False, nullable=False)
+    zone = relationship("Zone", back_populates="hikes")
+
+    hosts = relationship('Host', secondary=hosts_hikes_association, back_populates='hikes')
+
+    def __repr__(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "distance": self.distance,
+        }
 

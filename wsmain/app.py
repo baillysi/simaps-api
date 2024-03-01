@@ -1,9 +1,11 @@
 # This is a sample Python script.
+import json
 
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from model.host import Host
 from model.hike import Hike
+from model.zone import Zone
 from model.base import Session
 
 session = Session()
@@ -38,8 +40,18 @@ def add_host():
 
 @app.route('/hikes')
 def get_hikes():
-    hikes = session.query(Hike).all()
+    if 'zone' in request.args:
+        zone = request.args.get('zone')
+        hikes = session.query(Hike).join(Zone, Zone.id == Hike.zone_id).filter(Zone.name == zone).all()
+    else:
+        hikes = session.query(Hike).all()
     return jsonify(hikes), 200
+
+
+@app.route('/hikes/<int:id_hike>')
+def get_hike(id_hike):
+    hike = session.get(Hike, id_hike)
+    return hike.__repr__(), 200
 
 
 @app.route('/hikes', methods=['POST'])
@@ -48,8 +60,8 @@ def add_hike():
         name=request.json['name'],
         distance=request.json['distance']
     )
+    new_hike.zone_id = request.json['zone_id']
     for host_id in request.json['hosts']:
-        print(host_id)
         host = session.query(Host).get(host_id)
         new_hike.hosts.append(host)
 
@@ -64,6 +76,12 @@ def delete_hike(id_hike):
     session.delete(hike)
     session.commit()
     return "", 204
+
+
+@app.route('/zones/<int:id_zone>')
+def get_zone(id_zone):
+    zone = session.get(Zone, id_zone)  # <class 'model.zone.Zone'>
+    return zone.__repr__(), 200  # <class 'dict'>
 
 
 if __name__ == "__main__":
