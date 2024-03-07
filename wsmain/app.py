@@ -42,7 +42,8 @@ def add_host():
 def get_hikes():
     if 'zone' in request.args:
         zone = request.args.get('zone')
-        hikes = session.query(Hike).join(Zone, Zone.id == Hike.zone_id).filter(Zone.name == zone).all()
+        hikes = (session.query(Hike).join(Zone, Zone.id == Hike.zone_id).filter(Zone.name == zone)
+                 .order_by(Hike.id).all())
     else:
         hikes = session.query(Hike).all()
     return jsonify(hikes), 200
@@ -68,6 +69,15 @@ def add_hike():
     session.add(new_hike)
     session.commit()
     return "", 201
+
+
+@app.route('/hikes/<int:id_hike>', methods=['PUT'])
+def update_hike(id_hike):
+    hike = session.get(Hike, id_hike)
+    hike.name = request.json['name']
+    hike.distance = request.json['distance']
+    session.commit()
+    return "", 200
 
 
 @app.route('/hikes/<int:id_hike>', methods=['DELETE'])
