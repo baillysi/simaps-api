@@ -40,19 +40,22 @@ def add_host():
 
 @app.route('/hikes')
 def get_hikes():
+    response = []
     if 'zone' in request.args:
         zone = request.args.get('zone')
         hikes = (session.query(Hike).join(Zone, Zone.id == Hike.zone_id).filter(Zone.name == zone)
                  .order_by(Hike.id).all())
     else:
         hikes = session.query(Hike).all()
-    return jsonify(hikes), 200
+        for h in hikes:
+            response.append(h.__repr__())
+    return json.dumps(response), 200
 
 
 @app.route('/hikes/<int:id_hike>')
 def get_hike(id_hike):
     hike = session.get(Hike, id_hike)
-    return hike.__repr__(), 200
+    return hike.__repr__(), 200  # <class 'dict'>
 
 
 @app.route('/hikes', methods=['POST'])

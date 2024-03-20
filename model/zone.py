@@ -26,7 +26,7 @@ class Zone(Base):
         return {
             "id": self.id,
             "name": self.name,
-            "hikes": [hike for hike in self.hikes],
+            "hikes": [hike.__repr__() for hike in self.hikes],
             "location": str(to_shape(self.location)),  # cast WKBElement
             "lat": str(to_shape(self.location).x),
             "lng": str(to_shape(self.location).y)
