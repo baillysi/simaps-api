@@ -30,7 +30,10 @@ class Hike(Base):
     gpx: WKBElement = Column(Geography(geometry_type="LINESTRING", srid=4326))
 
     def __repr__(self):
-        swapped = transform(lambda x, y: (y, x), to_shape(self.gpx))  # flip lat lng to fit leaflet system
+        if self.gpx:  # Todo handle not null constraint on gpx data
+            swapped = transform(lambda x, y: (y, x), to_shape(self.gpx))  # flip lat lng to fit leaflet system
+        else:
+            swapped = None
         return {
             "id": self.id,
             "name": self.name,

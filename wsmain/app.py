@@ -62,7 +62,8 @@ def get_hike(id_hike):
 def add_hike():
     new_hike = Hike(
         name=request.json['name'],
-        distance=request.json['distance']
+        distance=request.json['distance'],
+        # gpx=request.json['gpx']
     )
     new_hike.zone_id = request.json['zone_id']
     for host_id in request.json['hosts']:
