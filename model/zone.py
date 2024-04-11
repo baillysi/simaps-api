@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from sqlalchemy import String, Integer, Date, Column
+from sqlalchemy import String, Integer, Column
 from sqlalchemy.orm import relationship
 
 from geoalchemy2 import Geography

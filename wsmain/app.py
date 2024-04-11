@@ -6,6 +6,7 @@ from flask_cors import CORS
 from model.host import Host
 from model.hike import Hike
 from model.zone import Zone
+from model.journey import Journey
 from model.base import Session
 
 session = Session()
@@ -63,9 +64,15 @@ def add_hike():
     new_hike = Hike(
         name=request.json['name'],
         distance=request.json['distance'],
-        # gpx=request.json['gpx']
+        elevation=request.json['elevation'],
+        difficulty=request.json['difficulty'],
+        duration=request.json['duration'],
+        rates=request.json['rates'],
+        description=request.json['description'],
     )
+    new_hike.journey_id = request.json['journey']['id']
     new_hike.zone_id = request.json['zone_id']
+
     for host_id in request.json['hosts']:
         host = session.query(Host).get(host_id)
         new_hike.hosts.append(host)
@@ -80,6 +87,12 @@ def update_hike(id_hike):
     hike = session.get(Hike, id_hike)
     hike.name = request.json['name']
     hike.distance = request.json['distance']
+    hike.elevation = request.json['elevation']
+    hike.difficulty = request.json['difficulty']
+    hike.duration = request.json['duration']
+    hike.journey_id = request.json['journey']['id']
+    hike.rates = request.json['rates']
+    hike.description = request.json['description']
     session.commit()
     return "", 200
 
@@ -96,6 +109,12 @@ def delete_hike(id_hike):
 def get_zone(id_zone):
     zone = session.get(Zone, id_zone)  # <class 'model.zone.Zone'>
     return zone.__repr__(), 200  # <class 'dict'>
+
+
+@app.route('/journeys')
+def get_journeys():
+    journeys = session.query(Journey).all()
+    return jsonify(journeys), 200
 
 
 if __name__ == "__main__":

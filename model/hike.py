@@ -20,7 +20,15 @@ class Hike(Base):
     id: int = Column(Integer, primary_key=True)
     name: str = Column(String)
     distance: int = Column(Integer)
+    elevation: int = Column(Integer)
+    difficulty: int = Column(Integer)
+    duration: int = Column(Integer)
+    rates: int = Column(Integer)
+    description: str = Column(String)
     created_at = Column(Date, default=dt.datetime.now())
+
+    journey_id = Column(Integer, ForeignKey('journeys.id'), unique=False, nullable=False)
+    journey = relationship("Journey", back_populates="hikes")
 
     zone_id = Column(Integer, ForeignKey('zones.id'), unique=False, nullable=False)
     zone = relationship("Zone", back_populates="hikes")
@@ -38,6 +46,12 @@ class Hike(Base):
             "id": self.id,
             "name": self.name,
             "distance": self.distance,
+            "elevation": self.elevation,
+            "difficulty": self.difficulty,
+            "duration": self.duration,
+            "rates": self.rates,
+            "description": self.description,
+            "journey": self.journey,
             "coordinates": get_coordinates(swapped).tolist()
         }
 
