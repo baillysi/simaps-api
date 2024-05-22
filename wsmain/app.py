@@ -1,6 +1,4 @@
 # This is a sample Python script.
-import json
-
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from model.host import Host
@@ -48,9 +46,9 @@ def get_hikes():
                  .order_by(Hike.id).all())
     else:
         hikes = session.query(Hike).all()
-        for h in hikes:
-            response.append(h.__repr__())
-    return json.dumps(response), 200
+    for h in hikes:
+        response.append(h.__repr__())
+    return jsonify(response), 200
 
 
 @app.route('/hikes/<int:id_hike>')
