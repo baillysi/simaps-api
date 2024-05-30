@@ -10,6 +10,7 @@ from geoalchemy2 import Geography
 from geoalchemy2.elements import WKBElement
 from geoalchemy2.shape import to_shape
 from shapely import get_coordinates
+from pyproj import Geod
 
 
 @dataclass
@@ -44,6 +45,32 @@ class Hike(Base):
         # ST_Y(ST_GeomFromEWKB(wkb_geometry)),
         # ele) FROM main.track_points ORDER BY ogc_fid
         # ) ),4326) where id = 53;
+        geojson = self.define_geojson()
+
+        if self.get_geojson_distance():
+            distance = round(self.get_geojson_distance() / 1000, 1)
+        else:
+            distance = self.distance
+
+        if self.get_geojson_elevation():
+            elevation = round(self.get_geojson_elevation())
+        else:
+            elevation = self.elevation
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "distance": distance,
+            "elevation": elevation,
+            "difficulty": self.difficulty,
+            "duration": self.duration,
+            "rates": self.rates,
+            "journey": self.journey,
+            "description": self.description,
+            "geojson": geojson,
+        }
+
+    def define_geojson(self):
         if self.gpx:
             coordinates = get_coordinates(to_shape(self.gpx), include_z=True).tolist()
             geojson = {
@@ -66,19 +93,30 @@ class Hike(Base):
             }
         else:
             geojson = None
+        return geojson
 
-        return {
-            "id": self.id,
-            "name": self.name,
-            "distance": self.distance,
-            "elevation": self.elevation,
-            "difficulty": self.difficulty,
-            "duration": self.duration,
-            "rates": self.rates,
-            "journey": self.journey,
-            "description": self.description,
-            "geojson": geojson,
-        }
+    def get_geojson_elevation(self):
+        if self.gpx:
+            coordinates = get_coordinates(to_shape(self.gpx), include_z=True).tolist()
+            x = 1
+            total_elevation = 0
+            for x in range(len(coordinates)):
+                if (coordinates[x][2]) > (coordinates[x - 1][2]):
+                    step = coordinates[x][2] - coordinates[x - 1][2]
+                    total_elevation += step
+        else:
+            total_elevation = None
+        return total_elevation
+
+    def get_geojson_distance(self):
+        geodesic = Geod(ellps="WGS84")
+        if self.gpx:
+            total_length = geodesic.geometry_length(to_shape(self.gpx))
+        else:
+            total_length = None
+        return total_length
+
+
 
 
 
