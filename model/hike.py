@@ -98,11 +98,10 @@ class Hike(Base):
     def get_geojson_elevation(self):
         if self.gpx:
             coordinates = get_coordinates(to_shape(self.gpx), include_z=True).tolist()
-            x = 1
             total_elevation = 0
-            for x in range(len(coordinates)):
-                if (coordinates[x][2]) > (coordinates[x - 1][2]):
-                    step = coordinates[x][2] - coordinates[x - 1][2]
+            for x in range(0, len(coordinates) - 100, 100):
+                if (coordinates[x + 100][2]) > (coordinates[x][2]):
+                    step = coordinates[x + 100][2] - coordinates[x][2]
                     total_elevation += step
         else:
             total_elevation = None
