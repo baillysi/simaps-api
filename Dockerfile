@@ -8,7 +8,7 @@ WORKDIR /app
 COPY . /app
 
 # Install Flask and other dependencies
-RUN pip install --upgrade pip --no-cache-dir -r requirements.txt --root-user-action=ignore
+RUN pip install --upgrade pip --no-cache-dir -r requirements.txt
 
 # Make port 8080 available for the app
 EXPOSE 8080
