@@ -45,6 +45,7 @@ def connect_unix_socket() -> sqlalchemy.engine.base.Engine:
 
 
 Session = sessionmaker(bind=connect_unix_socket())
+session = Session()
 Base = declarative_base()
 
 
@@ -71,7 +72,7 @@ def hello_world():
 
 @app.route('/users')
 def get_users():
-    users = User.query.all()
+    users = session.query(User).all()
     return jsonify(users), 200
 
 
