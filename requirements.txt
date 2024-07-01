@@ -15,6 +15,7 @@ frozenlist==1.4.1
 GeoAlchemy2==0.15.1
 google-auth==2.30.0
 greenlet==3.0.3
+gunicorn==22.0.0
 idna==3.7
 itsdangerous==2.2.0
 Jinja2==3.1.4
