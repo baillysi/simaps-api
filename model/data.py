@@ -2,7 +2,6 @@
 
 from sqlalchemy import String, Integer, Date, Column, ForeignKey
 from sqlalchemy.orm import relationship
-from model.db import Base
 import datetime as dt
 from dataclasses import dataclass
 
@@ -11,6 +10,47 @@ from geoalchemy2.elements import WKBElement
 from geoalchemy2.shape import to_shape
 from shapely import get_coordinates
 from pyproj import Geod
+
+from model.db import Base
+
+
+@dataclass
+class Zone(Base):
+    __tablename__ = 'zones'
+
+    id: int = Column(Integer, primary_key=True)
+    name: str = Column(String)
+
+    location: WKBElement = Column(Geography(geometry_type="POINT", srid=4326))
+
+    hikes = relationship('Hike', back_populates='zone', lazy='dynamic')
+
+    def __repr__(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "hikes": [hike.__repr__() for hike in self.hikes],
+            "location": str(to_shape(self.location)),  # cast WKBElement
+            "lat": str(to_shape(self.location).x),
+            "lng": str(to_shape(self.location).y)
+        }
+
+
+@dataclass
+class Journey(Base):
+    __tablename__ = 'journeys'
+
+    id: int = Column(Integer, primary_key=True)
+    name: str = Column(String)
+
+    hikes = relationship('Hike', back_populates='journey', lazy='dynamic')
+
+    def __repr__(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "hikes": [hike.__repr__() for hike in self.hikes]
+        }
 
 
 @dataclass

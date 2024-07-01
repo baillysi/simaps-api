@@ -1,40 +1,14 @@
-# This is a sample Python script.
+# coding=utf-8
 from flask import Flask, jsonify, request
-from flask_cors import CORS
-from model.host import Host
-from model.hike import Hike
-from model.zone import Zone
-from model.journey import Journey
-from model.base import Session
-
-session = Session()
+from model.data import Hike, Journey, Zone
+from model.db import session
 
 app = Flask(__name__)
-CORS(app)
 
 
-@app.route('/hosts')
-def get_hosts():
-    hosts = session.query(Host).all()
-    return jsonify(hosts), 200
-
-
-@app.route('/hosts/<int:id_host>')
-def get_host(id_host):
-    host = session.get(Host, id_host)  # Returns the row referenced by the primary key parameter passed as argument.
-    return host.__repr__(), 200
-
-
-@app.route('/hosts', methods=['POST'])
-def add_host():
-    new_host = Host(
-        name=request.json['name'],
-        zone=request.json['zone'],
-        price=request.json['price']
-    )
-    session.add(new_host)
-    session.commit()
-    return "", 201
+@app.route("/")
+def hello_world():
+    return 'Hello world'
 
 
 @app.route('/hikes')
@@ -70,10 +44,6 @@ def add_hike():
     )
     new_hike.journey_id = request.json['journey']['id']
     new_hike.zone_id = request.json['zone_id']
-
-    for host_id in request.json['hosts']:
-        host = session.query(Host).get(host_id)
-        new_hike.hosts.append(host)
 
     session.add(new_hike)
     session.commit()
@@ -117,3 +87,4 @@ def get_journeys():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
+
