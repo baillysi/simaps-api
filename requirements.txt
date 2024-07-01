@@ -4,3 +4,6 @@ python-dotenv==1.0.1
 SQLAlchemy==2.0.31
 pg8000==1.31.2
 cloud-sql-python-connector==1.10.0
+GeoAlchemy2==0.15.1
+shapely==2.0.4
+pyproj==3.6.1
