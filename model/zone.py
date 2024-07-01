@@ -7,7 +7,7 @@ from geoalchemy2 import Geography
 from geoalchemy2.elements import WKBElement
 from geoalchemy2.shape import to_shape
 
-from model.base import Base
+from model.db import Base
 from dataclasses import dataclass
 
 

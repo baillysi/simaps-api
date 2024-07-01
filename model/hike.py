@@ -2,7 +2,7 @@
 
 from sqlalchemy import String, Integer, Date, Column, ForeignKey
 from sqlalchemy.orm import relationship
-from model.base import Base, hosts_hikes_association
+from model.db import Base
 import datetime as dt
 from dataclasses import dataclass
 
@@ -32,8 +32,6 @@ class Hike(Base):
 
     zone_id = Column(Integer, ForeignKey('zones.id'), unique=False, nullable=False)
     zone = relationship("Zone", back_populates="hikes")
-
-    hosts = relationship('Host', secondary=hosts_hikes_association, back_populates='hikes')
 
     gpx: WKBElement = Column(Geography(geometry_type="LINESTRING", srid=4326))
 

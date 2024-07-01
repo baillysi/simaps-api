@@ -3,7 +3,7 @@
 from sqlalchemy import String, Integer, Column
 from sqlalchemy.orm import relationship
 
-from model.base import Base
+from model.db import Base
 from dataclasses import dataclass
 
 
