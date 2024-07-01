@@ -18,7 +18,7 @@ def connect_with_connector() -> sqlalchemy.engine.base.Engine:
     # Cloud Secret Manager (https://cloud.google.com/secret-manager) to help
     # keep secrets safe.
 
-    load_dotenv(f"conf/deploy.env")
+    load_dotenv(f"conf/prod.env")
 
     instance_connection_name = os.environ[
         "INSTANCE_CONNECTION_NAME"
