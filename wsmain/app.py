@@ -1,10 +1,11 @@
 # coding=utf-8
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 from model.data import Hike, Journey, Zone
 from model.db import session
 
 app = Flask(__name__)
-
+CORS(app)
 
 @app.route("/")
 def hello_world():
