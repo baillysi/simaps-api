@@ -7,6 +7,7 @@ from model.db import session
 app = Flask(__name__)
 CORS(app)
 
+
 @app.route("/")
 def hello_world():
     return 'Hello world'

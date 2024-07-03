@@ -1,13 +1,25 @@
 # coding=utf-8
 import pg8000
-import os
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from google.cloud.sql.connector import Connector, IPTypes
-from dotenv import load_dotenv
+from dotenv import dotenv_values
+from wsmain import env
 
 
-def connect_with_connector() -> sqlalchemy.engine.base.Engine:
+def connect_without_connector(config):
+
+    db_user = config.get('POSTGRES_USER')
+    db_pass = config.get('POSTGRES_PASSWORD')
+    db_name = config.get('POSTGRES_DB')
+
+    pool = sqlalchemy.create_engine(f"postgresql+psycopg2://{db_user}:{db_pass}@localhost:5431/{db_name}")
+
+    return pool
+
+
+def connect_with_connector(config) -> sqlalchemy.engine.base.Engine:
+
     """
     Initializes a connection pool for a Cloud SQL instance of Postgres.
 
@@ -18,18 +30,15 @@ def connect_with_connector() -> sqlalchemy.engine.base.Engine:
     # Cloud Secret Manager (https://cloud.google.com/secret-manager) to help
     # keep secrets safe.
 
-    load_dotenv(f"conf/prod.env")
+    db_user = config.get('POSTGRES_USER')
+    db_pass = config.get('POSTGRES_PASSWORD')
+    db_name = config.get('POSTGRES_DB')
+    instance_connection_name = config.get('INSTANCE_CONNECTION_NAME')
 
-    instance_connection_name = os.environ[
-        "INSTANCE_CONNECTION_NAME"
-    ]  # e.g. 'project:region:instance'
-    db_user = os.environ["DB_USER"]  # e.g. 'my-db-user'
-    db_pass = os.environ["DB_PASS"]  # e.g. 'my-db-password'
-    db_name = os.environ["DB_NAME"]  # e.g. 'my-database'
-
-    ip_type = IPTypes.PRIVATE if os.environ.get("PRIVATE_IP") else IPTypes.PUBLIC
+    ip_type = IPTypes.PRIVATE if config.get('PRIVATE_IP') else IPTypes.PUBLIC
 
     # initialize Cloud SQL Python Connector object
+    # only works with pg8000 driver
     connector = Connector()
 
     def getconn() -> pg8000.dbapi.Connection:
@@ -50,9 +59,14 @@ def connect_with_connector() -> sqlalchemy.engine.base.Engine:
         creator=getconn,
         # ...
     )
+
     return pool
 
 
-Session = sessionmaker(bind=connect_with_connector())
+if env == "dev":  # dev
+    Session = sessionmaker(bind=connect_without_connector(config=dotenv_values(f'./conf/dev.env')))
+else:  # prod
+    Session = sessionmaker(bind=connect_with_connector(config=dotenv_values(f'./conf/prod.env')))
+
 session = Session()
 Base = sqlalchemy.orm.declarative_base()
