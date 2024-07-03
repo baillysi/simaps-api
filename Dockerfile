@@ -13,5 +13,8 @@ RUN pip install --upgrade pip --no-cache-dir -r requirements.txt --root-user-act
 # Make port 8080 available for the app
 EXPOSE 8080
 
+# Production mode
+ENV ENV=prod
+
 RUN chmod a+x docker-entrypoint.sh
 CMD ["/app/docker-entrypoint.sh"]
