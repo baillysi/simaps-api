@@ -86,7 +86,7 @@ class Hike(Base):
         geojson = self.define_geojson()
 
         if self.get_geojson_distance():
-            distance = round(self.get_geojson_distance() / 1000, 1)
+            distance = round(self.get_geojson_distance() / 1000)
         else:
             distance = self.distance
 
