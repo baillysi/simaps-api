@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from model.data import Hike, Journey, Zone
 from model.db import session
+from sqlalchemy.orm import load_only
 
 app = Flask(__name__)
 CORS(app)
@@ -79,6 +80,31 @@ def delete_hike(id_hike):
 def get_zone(id_zone):
     zone = session.get(Zone, id_zone)  # <class 'model.zone.Zone'>
     return zone.__repr__(), 200  # <class 'dict'>
+
+
+@app.route('/zones')
+def get_zones():
+    response = []
+    fields = [Zone.name, Zone.id]
+    zones = session.query(Zone).options(load_only(*fields))
+    for z in zones:
+        count = session.query(Hike).join(Zone, Zone.id == Hike.zone_id).filter(Zone.id == z.id).count()
+        data = {
+            'id': z.id,
+            'name': z.name,
+            'count': count
+        }
+        response.append(data)
+    return jsonify(response), 200  # <class 'dict'>
+
+
+@app.route('/zones/count')
+def get_zones_hikes_count():
+    response = {}
+    for zone in range(1, session.query(Zone).count() + 1):
+        count = session.query(Hike).join(Zone, Zone.id == Hike.zone_id).filter(Zone.id == zone).count()
+        response[zone] = count
+    return jsonify(response), 200  # <class 'dict'>
 
 
 @app.route('/journeys')
