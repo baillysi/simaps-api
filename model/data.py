@@ -20,17 +20,15 @@ class Zone(Base):
 
     id: int = Column(Integer, primary_key=True)
     name: str = Column(String)
-
     location: WKBElement = Column(Geography(geometry_type="POINT", srid=4326))
 
-    hikes = relationship('Hike', back_populates='zone', lazy='dynamic')
+    hikes = relationship('Hike', back_populates='zone')
 
     def __repr__(self):
         return {
             "id": self.id,
             "name": self.name,
             "hikes": [hike.__repr__() for hike in self.hikes],
-            "location": str(to_shape(self.location)),  # cast WKBElement
             "lat": str(to_shape(self.location).x),
             "lng": str(to_shape(self.location).y)
         }
@@ -43,69 +41,29 @@ class Journey(Base):
     id: int = Column(Integer, primary_key=True)
     name: str = Column(String)
 
-    hikes = relationship('Hike', back_populates='journey', lazy='dynamic')
+    hikes = relationship('Hike', back_populates='journey', lazy='noload')
 
     def __repr__(self):
         return {
             "id": self.id,
-            "name": self.name,
-            "hikes": [hike.__repr__() for hike in self.hikes]
+            "name": self.name
         }
 
 
 @dataclass
-class Hike(Base):
-    __tablename__ = 'hikes'
+class Trail(Base):
+    __tablename__ = 'trails'
 
     id: int = Column(Integer, primary_key=True)
-    name: str = Column(String)
-    distance: int = Column(Integer)
-    elevation: int = Column(Integer)
-    difficulty: int = Column(Integer)
-    duration: int = Column(Integer)
-    rates: int = Column(Integer)
-    description: str = Column(String)
-    created_at = Column(Date, default=dt.datetime.now())
-
-    journey_id = Column(Integer, ForeignKey('journeys.id'), unique=False, nullable=False)
-    journey = relationship("Journey", back_populates="hikes")
-
-    zone_id = Column(Integer, ForeignKey('zones.id'), unique=False, nullable=False)
-    zone = relationship("Zone", back_populates="hikes")
-
     gpx: WKBElement = Column(Geography(geometry_type="LINESTRING", srid=4326))
 
+    hikes = relationship('Hike', back_populates='trail', lazy='noload')
+
     def __repr__(self):
-        # TODO handle not null constraint on gpx data
-        # PostGIS command to upload gpx to DB :
-        # update main.hikes set gpx = ST_SetSRID(ST_MakeLine( ARRAY( SELECT ST_MakePoint(
-        # ST_X(ST_GeomFromEWKB(wkb_geometry)),
-        # ST_Y(ST_GeomFromEWKB(wkb_geometry)),
-        # ele) FROM main.track_points ORDER BY ogc_fid
-        # ) ),4326) where id = 53;
         geojson = self.define_geojson()
-
-        if self.get_geojson_distance():
-            distance = round(self.get_geojson_distance() / 1000)
-        else:
-            distance = self.distance
-
-        if self.get_geojson_elevation():
-            elevation = round(self.get_geojson_elevation())
-        else:
-            elevation = self.elevation
-
         return {
             "id": self.id,
-            "name": self.name,
-            "distance": distance,
-            "elevation": elevation,
-            "difficulty": self.difficulty,
-            "duration": self.duration,
-            "rates": self.rates,
-            "journey": self.journey,
-            "description": self.description,
-            "geojson": geojson,
+            "geojson": geojson
         }
 
     def define_geojson(self):
@@ -133,9 +91,58 @@ class Hike(Base):
             geojson = None
         return geojson
 
+
+@dataclass
+class Hike(Base):
+    __tablename__ = 'hikes'
+
+    id: int = Column(Integer, primary_key=True)
+    name: str = Column(String)
+    distance: int = Column(Integer)
+    elevation: int = Column(Integer)
+    difficulty: int = Column(Integer)
+    duration: int = Column(Integer)
+    rates: int = Column(Integer)
+    description: str = Column(String)
+    created_at = Column(Date, default=dt.datetime.now())
+
+    journey_id = Column(Integer, ForeignKey('journeys.id'), unique=False, nullable=False)
+    journey = relationship("Journey", back_populates="hikes")
+
+    zone_id = Column(Integer, ForeignKey('zones.id'), unique=False, nullable=False)
+    zone = relationship("Zone", back_populates="hikes")
+
+    trail_id = Column(Integer, ForeignKey('trails.id'), unique=False, nullable=True)
+    trail = relationship("Trail", back_populates="hikes")
+
+    def __repr__(self):
+
+        if self.get_geojson_distance():
+            distance = round(self.get_geojson_distance() / 1000)
+        else:
+            distance = self.distance
+
+        if self.get_geojson_elevation():
+            elevation = round(self.get_geojson_elevation())
+        else:
+            elevation = self.elevation
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "distance": distance,
+            "elevation": elevation,
+            "difficulty": self.difficulty,
+            "duration": self.duration,
+            "rates": self.rates,
+            "journey": self.journey,
+            "description": self.description,
+            "trail": self.trail.__repr__(),
+        }
+
     def get_geojson_elevation(self):
-        if self.gpx:
-            coordinates = get_coordinates(to_shape(self.gpx), include_z=True).tolist()
+        if self.trail:
+            coordinates = get_coordinates(to_shape(self.trail.gpx), include_z=True).tolist()
             total_elevation = 0
             for x in range(0, len(coordinates) - 100, 100):
                 if (coordinates[x + 100][2]) > (coordinates[x][2]):
@@ -147,8 +154,8 @@ class Hike(Base):
 
     def get_geojson_distance(self):
         geodesic = Geod(ellps="WGS84")
-        if self.gpx:
-            total_length = geodesic.geometry_length(to_shape(self.gpx))
+        if self.trail:
+            total_length = geodesic.geometry_length(to_shape(self.trail.gpx))
         else:
             total_length = None
         return total_length
