@@ -3,6 +3,7 @@ import pg8000
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from google.cloud.sql.connector import Connector, IPTypes
+from google.cloud import secretmanager
 from dotenv import dotenv_values
 from wsmain import env
 
@@ -30,8 +31,29 @@ def connect_with_connector(config) -> sqlalchemy.engine.base.Engine:
     # Cloud Secret Manager (https://cloud.google.com/secret-manager) to help
     # keep secrets safe.
 
+    # Create the Secret Manager client.
+    client = secretmanager.SecretManagerServiceClient()
+
+    # GCP project.
+    project_id = "352736694151"
+
+    # ID of the secret.
+    secret_id = "POSTGRES_PASSWORD"
+
+    # ID of the version
+    version_id = "1"
+
+    # Build the resource name.
+    name = client.secret_version_path(project_id, secret_id, version_id)
+
+    # Get the secret version.
+    response = client.access_secret_version(request={"name": name})
+
+    # Get and use the payload.
+    payload = response.payload.data.decode("UTF-8")
+
     db_user = config.get('POSTGRES_USER')
-    db_pass = config.get('POSTGRES_PASSWORD')
+    db_pass = payload
     db_name = config.get('POSTGRES_DB')
     instance_connection_name = config.get('INSTANCE_CONNECTION_NAME')
 
