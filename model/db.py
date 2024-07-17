@@ -1,6 +1,7 @@
 # coding=utf-8
 import pg8000
 import sqlalchemy
+import json
 from sqlalchemy.orm import sessionmaker
 from google.cloud.sql.connector import Connector, IPTypes
 from google.cloud import secretmanager
@@ -35,13 +36,13 @@ def connect_with_connector(config) -> sqlalchemy.engine.base.Engine:
     client = secretmanager.SecretManagerServiceClient()
 
     # GCP project.
-    project_id = "352736694151"
+    project_id = config.get('project_id')
 
     # ID of the secret.
-    secret_id = "POSTGRES_PASSWORD"
+    secret_id = config.get('secret_id')
 
     # ID of the version
-    version_id = "1"
+    version_id = config.get('version_id')
 
     # Build the resource name.
     name = client.secret_version_path(project_id, secret_id, version_id)
@@ -50,14 +51,15 @@ def connect_with_connector(config) -> sqlalchemy.engine.base.Engine:
     response = client.access_secret_version(request={"name": name})
 
     # Get and use the payload.
-    payload = response.payload.data.decode("UTF-8")
+    payload = json.loads(response.payload.data.decode("UTF-8"))
 
-    db_user = config.get('POSTGRES_USER')
-    db_pass = payload
-    db_name = config.get('POSTGRES_DB')
-    instance_connection_name = config.get('INSTANCE_CONNECTION_NAME')
+    db_user = payload['POSTGRES_USER']
+    db_pass = payload['POSTGRES_PASSWORD']
+    db_name = payload['POSTGRES_DB']
 
-    ip_type = IPTypes.PRIVATE if config.get('PRIVATE_IP') else IPTypes.PUBLIC
+    instance_connection_name = payload['INSTANCE_CONNECTION_NAME']
+
+    ip_type = IPTypes.PUBLIC
 
     # initialize Cloud SQL Python Connector object
     # only works with pg8000 driver
