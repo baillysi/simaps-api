@@ -35,6 +35,12 @@ def get_hike(hike_id):
     return hike.__repr__(), 200
 
 
+@app.route('/hikes/latest')
+def get_latest_hike():
+    hike = session.query(Hike).order_by(Hike.id.desc()).first()
+    return hike.__repr__(), 200
+
+
 @app.route('/hikes', methods=['POST'])
 def add_hike():
     new_hike = Hike(
@@ -51,7 +57,7 @@ def add_hike():
 
     session.add(new_hike)
     session.commit()
-    return "", 201
+    return '', 201
 
 
 @app.route('/hikes/<int:hike_id>', methods=['PUT'])
@@ -66,7 +72,7 @@ def update_hike(hike_id):
     hike.rates = request.json['rates']
     hike.description = request.json['description']
     session.commit()
-    return "", 200
+    return '', 200
 
 
 @app.route('/hikes/<int:hike_id>', methods=['DELETE'])
@@ -74,7 +80,7 @@ def delete_hike(hike_id):
     hike = session.get(Hike, hike_id)
     session.delete(hike)
     session.commit()
-    return "", 204
+    return '', 204
 
 
 @app.route('/journeys')

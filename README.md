@@ -26,6 +26,11 @@ docker-compose up --build
 ```
 exposed on local port 5431
 
+### Test
+```
+pytest
+```
+
 ### Run 
 ```
 python -m wsmain.app
