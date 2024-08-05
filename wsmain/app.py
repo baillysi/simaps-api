@@ -5,6 +5,11 @@ from model.data import Hike, Journey, Zone, Trail
 from model.db import session
 from sqlalchemy.orm import noload
 
+from firebase_admin import initialize_app
+from firebase_admin.auth import verify_id_token
+
+_FIREBASE_APP = initialize_app()
+
 app = Flask(__name__)
 CORS(app)
 
@@ -14,8 +19,32 @@ def hello_world():
     return 'Hello world'
 
 
+@app.route("/user")
+def get_current_user():
+    # Return None if no Authorization header.
+    if "Authorization" not in request.headers:
+        return None
+    authorization = request.headers["Authorization"]
+
+    # Authorization header format is "Bearer <token>".
+    # This matches OAuth 2.0 spec:
+    # https://www.rfc-editor.org/rfc/rfc6750.txt.
+    if not authorization.startswith("Bearer "):
+        return None
+
+    token = authorization.split("Bearer ")[1]
+
+    # Verify that the token is valid.
+    result = verify_id_token(token)
+    # Return the user ID of the authenticated user.
+    return result["uid"]
+
+
 @app.route('/zones/<int:zone_id>')
 def get_zone(zone_id):
+    user = get_current_user()
+    if not user:
+        return '', 401
     zone = session.get(Zone, zone_id)
     return zone.__repr__(), 200
 
@@ -31,6 +60,9 @@ def get_zones_hikes_count():
 
 @app.route('/hikes/<int:hike_id>')
 def get_hike(hike_id):
+    user = get_current_user()
+    if not user:
+        return '', 401
     hike = session.get(Hike, hike_id, options=[noload(Hike.trail)])
     return hike.__repr__(), 200
 
@@ -98,4 +130,3 @@ def get_trail():
 
 if __name__ == "__main__":
     app.run(debug=True, port=5001)
-
