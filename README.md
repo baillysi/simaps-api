@@ -12,12 +12,14 @@ simaps-api provides a REST API to handle CRUD operations on various data, like h
 
 - Conda >= 23.3.1
 - Docker >= 24.0.7
+- Google SA to access Firebase services [see more](https://firebase.google.com/docs/admin/setup?hl=fr#python)
   
 ### Environment
 ```
 conda conda create --name simaps-api python=3.11
 conda activate simaps-api
 export ENV=dev
+export GOOGLE_APPLICATION_CREDENTIALS="/home/user/Downloads/service-account-file.json"
 ```
 
 ### Setup Database with docker-compose

@@ -4,12 +4,47 @@ from flask_cors import CORS
 from model.data import Hike, Journey, Zone, Trail
 from model.db import session
 from sqlalchemy.orm import noload
+import json
 
 from firebase_admin import initialize_app
 from firebase_admin.auth import verify_id_token
 
-_FIREBASE_APP = initialize_app()
+from google.cloud import secretmanager
+from dotenv import dotenv_values
 
+from wsmain import env
+
+# firebase app
+if env == "dev":  # dev
+    _FIREBASE_APP = initialize_app()
+else:  # prod
+    # Create the Secret Manager client.
+    client = secretmanager.SecretManagerServiceClient()
+
+    config = dotenv_values(f'./conf/prod.env')
+
+    # GCP project.
+    project_id = config.get('project_id')
+
+    # ID of the secret.
+    secret_id = config.get('firebase_sdk_admin_secret_id')
+
+    # ID of the version
+    version_id = config.get('firebase_sdk_admin_version_id')
+
+    # Build the resource name.
+    name = client.secret_version_path(project_id, secret_id, version_id)
+
+    # Get the secret version.
+    response = client.access_secret_version(request={"name": name})
+
+    # Get and use the payload.
+    payload = json.loads(response.payload.data.decode("UTF-8"))
+
+    _FIREBASE_APP = initialize_app(credential=payload)
+
+
+# flask app
 app = Flask(__name__)
 CORS(app)
 
@@ -51,6 +86,9 @@ def get_zone(zone_id):
 
 @app.route('/zones/count')
 def get_zones_hikes_count():
+    user = get_current_user()
+    if not user:
+        return '', 401
     response = {}
     for zone in range(1, session.query(Zone).count() + 1):
         count = session.query(Hike).join(Zone, Zone.id == Hike.zone_id).filter(Zone.id == zone).count()
@@ -60,9 +98,6 @@ def get_zones_hikes_count():
 
 @app.route('/hikes/<int:hike_id>')
 def get_hike(hike_id):
-    user = get_current_user()
-    if not user:
-        return '', 401
     hike = session.get(Hike, hike_id, options=[noload(Hike.trail)])
     return hike.__repr__(), 200
 
