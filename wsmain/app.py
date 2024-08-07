@@ -6,7 +6,7 @@ from model.db import session
 from sqlalchemy.orm import noload
 import json
 
-from firebase_admin import initialize_app
+from firebase_admin import initialize_app, credentials
 from firebase_admin.auth import verify_id_token
 
 from google.cloud import secretmanager
@@ -41,7 +41,9 @@ else:  # prod
     # Get and use the payload.
     payload = json.loads(response.payload.data.decode("UTF-8"))
 
-    _FIREBASE_APP = initialize_app(credential=payload)
+    creds = credentials.Certificate(payload)
+
+    _FIREBASE_APP = initialize_app(credential=creds)
 
 
 # flask app
