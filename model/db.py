@@ -39,10 +39,10 @@ def connect_with_connector(config) -> sqlalchemy.engine.base.Engine:
     project_id = config.get('project_id')
 
     # ID of the secret.
-    secret_id = config.get('secret_id')
+    secret_id = config.get('postgres_access_secret_id')
 
     # ID of the version
-    version_id = config.get('version_id')
+    version_id = config.get('postgres_access_version_id')
 
     # Build the resource name.
     name = client.secret_version_path(project_id, secret_id, version_id)
