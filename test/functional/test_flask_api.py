@@ -57,7 +57,7 @@ def test_should_update_hike_data():
     )
     hike_id = json.loads(response.data)['id']
 
-    payload['elevation'] = 300
+    payload['elevation'] = 270
 
     response = app.test_client().put(
         f'/hikes/{hike_id}',
@@ -77,7 +77,7 @@ def test_should_get_hike_data():
         '/hikes/latest',
         headers={'Content-Type': 'application/json'},
     )
-    assert json.loads(response.data)['elevation'] == 300
+    assert json.loads(response.data)['elevation'] == 270
     assert response.status_code == 200
 
 
