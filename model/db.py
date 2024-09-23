@@ -63,7 +63,7 @@ def connect_with_connector(config) -> sqlalchemy.engine.base.Engine:
 
     # initialize Cloud SQL Python Connector object
     # only works with pg8000 driver
-    connector = Connector()
+    connector = Connector(refresh_strategy="lazy")
 
     def getconn() -> pg8000.dbapi.Connection:
         conn: pg8000.dbapi.Connection = connector.connect(
