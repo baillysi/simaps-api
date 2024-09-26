@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from sqlalchemy import String, Integer, Date, Column, ForeignKey
+from sqlalchemy import String, Integer, Date, Column, ForeignKey, Float
 from sqlalchemy.orm import relationship
 import datetime as dt
 from dataclasses import dataclass
@@ -98,7 +98,7 @@ class Hike(Base):
 
     id: int = Column(Integer, primary_key=True)
     name: str = Column(String)
-    distance: int = Column(Integer)
+    distance: float = Column(Float)
     elevation: int = Column(Integer)
     difficulty: int = Column(Integer)
     duration: int = Column(Integer)
@@ -118,9 +118,9 @@ class Hike(Base):
     def __repr__(self):
 
         if self.get_geojson_distance():
-            distance = round(self.get_geojson_distance() / 1000)
+            distance = round(self.get_geojson_distance() / 1000, 1)
         else:
-            distance = self.distance
+            distance = round(self.distance, 1)
 
         if self.get_geojson_elevation():
             elevation = round(self.get_geojson_elevation())

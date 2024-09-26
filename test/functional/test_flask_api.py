@@ -6,10 +6,10 @@ app.testing = True
 # hike data payload
 payload = {
     'name': 'hike_test',
-    'distance': 10,
+    'distance': 10.5,
     'elevation': 500,
     'difficulty': 2,
-    'duration': 2,
+    'duration': 5400,
     'rates': 2,
     'description': 'hike_description',
     'zone_id': 1,
