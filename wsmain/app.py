@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from model.data import Hike, Journey, Zone, Trail
+from model.data import Hike, Journey, Zone, Trail, Viewpoint
 from model.db import session
 from sqlalchemy.orm import noload
 import json
@@ -163,6 +163,12 @@ def get_trail():
     hike_id = request.args.get('hike_id')
     trail = session.query(Trail).join(Hike, Hike.trail_id == Trail.id).filter(Hike.id == hike_id).one()
     return trail.__repr__(), 200
+
+
+@app.route('/viewpoints/<int:vp_id>')
+def get_viewpoint(vp_id):
+    viewpoint = session.get(Viewpoint, vp_id)
+    return viewpoint.__repr__(), 200
 
 
 if __name__ == "__main__":
