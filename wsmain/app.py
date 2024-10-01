@@ -79,18 +79,12 @@ def get_current_user():
 
 @app.route('/zones/<int:zone_id>')
 def get_zone(zone_id):
-    user = get_current_user()
-    if not user:
-        return '', 401
     zone = session.get(Zone, zone_id)
     return zone.__repr__(), 200
 
 
 @app.route('/zones/count')
 def get_zones_hikes_count():
-    user = get_current_user()
-    if not user:
-        return '', 401
     response = {}
     for zone in range(1, session.query(Zone).count() + 1):
         count = session.query(Hike).join(Zone, Zone.id == Hike.zone_id).filter(Zone.id == zone).count()
@@ -112,6 +106,9 @@ def get_latest_hike():
 
 @app.route('/hikes', methods=['POST'])
 def add_hike():
+    user = get_current_user()
+    if not user:
+        return '', 401
     new_hike = Hike(
         name=request.json['name'],
         distance=request.json['distance'],
@@ -131,6 +128,9 @@ def add_hike():
 
 @app.route('/hikes/<int:hike_id>', methods=['PUT'])
 def update_hike(hike_id):
+    user = get_current_user()
+    if not user:
+        return '', 401
     hike = session.get(Hike, hike_id)
     hike.name = request.json['name']
     hike.distance = request.json['distance']
@@ -146,6 +146,9 @@ def update_hike(hike_id):
 
 @app.route('/hikes/<int:hike_id>', methods=['DELETE'])
 def delete_hike(hike_id):
+    user = get_current_user()
+    if not user:
+        return '', 401
     hike = session.get(Hike, hike_id)
     session.delete(hike)
     session.commit()
