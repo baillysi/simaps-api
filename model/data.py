@@ -71,7 +71,6 @@ class Trail(Base):
     def define_geojson(self):
         if self.gpx:
             coordinates = get_coordinates(to_shape(self.gpx), include_z=True).tolist()
-            print(coordinates)
             geojson = {
                 "type": "FeatureCollection",
                 "features": [
