@@ -77,9 +77,9 @@ def get_current_user():
     return result["uid"]
 
 
-@app.route('/zones/<int:zone_id>')
-def get_zone(zone_id):
-    zone = session.get(Zone, zone_id)
+@app.route('/zones/<zone_name>')
+def get_zone_by_name(zone_name):
+    zone = session.query(Zone).filter_by(name=zone_name).first()
     return zone.__repr__(), 200
 
 
