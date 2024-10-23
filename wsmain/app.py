@@ -4,6 +4,7 @@ from flask_cors import CORS
 from model.data import Hike, Journey, Zone, Trail, Viewpoint
 from model.db import session
 from sqlalchemy.orm import noload
+from sqlalchemy.exc import DataError, IntegrityError, OperationalError, SQLAlchemyError
 import json
 
 from firebase_admin import initialize_app, credentials
@@ -121,9 +122,14 @@ def add_hike():
     new_hike.journey_id = request.json['journey']['id']
     new_hike.zone_id = request.json['zone_id']
 
-    session.add(new_hike)
-    session.commit()
-    return '', 201
+    try:
+        session.add(new_hike)
+    except SQLAlchemyError as err:
+        session.rollback()
+        raise err
+    else:
+        session.commit()
+        return '', 201
 
 
 @app.route('/hikes/<int:hike_id>', methods=['PUT'])
@@ -132,16 +138,22 @@ def update_hike(hike_id):
     if not user:
         return '', 401
     hike = session.get(Hike, hike_id)
-    hike.name = request.json['name']
-    hike.distance = request.json['distance']
-    hike.elevation = request.json['elevation']
-    hike.difficulty = request.json['difficulty']
-    hike.duration = request.json['duration']
-    hike.journey_id = request.json['journey']['id']
-    hike.rates = request.json['rates']
-    hike.description = request.json['description']
-    session.commit()
-    return '', 200
+
+    try:
+        hike.name = request.json['name']
+        hike.distance = request.json['distance']
+        hike.elevation = request.json['elevation']
+        hike.difficulty = request.json['difficulty']
+        hike.duration = request.json['duration']
+        hike.journey_id = request.json['journey']['id']
+        hike.rates = request.json['rates']
+        hike.description = request.json['description']
+    except SQLAlchemyError as err:
+        session.rollback()
+        raise err
+    else:
+        session.commit()
+        return '', 200
 
 
 @app.route('/hikes/<int:hike_id>', methods=['DELETE'])
@@ -150,9 +162,15 @@ def delete_hike(hike_id):
     if not user:
         return '', 401
     hike = session.get(Hike, hike_id)
-    session.delete(hike)
-    session.commit()
-    return '', 204
+
+    try:
+        session.delete(hike)
+    except SQLAlchemyError as err:
+        session.rollback()
+        raise err
+    else:
+        session.commit()
+        return '', 204
 
 
 @app.route('/journeys')

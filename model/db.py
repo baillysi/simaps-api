@@ -3,6 +3,7 @@ import pg8000
 import sqlalchemy
 import json
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import OperationalError
 from google.cloud.sql.connector import Connector, IPTypes
 from google.cloud import secretmanager
 from dotenv import dotenv_values
@@ -15,9 +16,12 @@ def connect_without_connector(config):
     db_pass = config.get('POSTGRES_PASSWORD')
     db_name = config.get('POSTGRES_DB')
 
-    pool = sqlalchemy.create_engine(f"postgresql+psycopg2://{db_user}:{db_pass}@localhost:5431/{db_name}")
-
-    return pool
+    try:
+        pool = sqlalchemy.create_engine(f"postgresql+psycopg2://{db_user}:{db_pass}@localhost:5431/{db_name}")
+    except OperationalError as err:
+        raise err
+    else:
+        return pool
 
 
 def connect_with_connector(config) -> sqlalchemy.engine.base.Engine:
@@ -78,13 +82,17 @@ def connect_with_connector(config) -> sqlalchemy.engine.base.Engine:
 
     # The Cloud SQL Python Connector can be used with SQLAlchemy
     # using the 'creator' argument to 'create_engine'
-    pool = sqlalchemy.create_engine(
-        "postgresql+pg8000://",
-        creator=getconn,
-        # ...
-    )
 
-    return pool
+    try:
+        pool = sqlalchemy.create_engine(
+            "postgresql+pg8000://",
+            creator=getconn,
+            # ...
+        )
+    except OperationalError as err:
+        raise err
+    else:
+        return pool
 
 
 if env == "dev":  # dev
