@@ -49,11 +49,11 @@ on:
     branches: [ "master" ]
 
 env:
-  PROJECT_ID: simaps # TODO: update Google Cloud project id
-  GAR_NAME: simaps-build # TODO: update Artifact Registry name
-  GAR_LOCATION: europe-west1 # TODO: update Artifact Registry location
-  SERVICE: simaps-api # TODO: update Cloud Run service name
-  REGION: europe-west1 # TODO: update Cloud Run service region
+  PROJECT_ID: simaps
+  GAR_NAME: simaps-build
+  GAR_LOCATION: europe-west1
+  SERVICE: simaps-api
+  REGION: europe-west1
 
 jobs:
   deploy:
