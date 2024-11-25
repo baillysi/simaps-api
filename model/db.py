@@ -2,6 +2,7 @@
 import pg8000
 import sqlalchemy
 import json
+from sqlalchemy import URL
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
 from google.cloud.sql.connector import Connector, IPTypes
@@ -24,13 +25,10 @@ def connect_without_connector(config):
         return pool
 
 
-def connect_with_connector(config) -> sqlalchemy.engine.base.Engine:
+def connect_unix_socket(config) -> sqlalchemy.engine.base.Engine:
 
-    """
-    Initializes a connection pool for a Cloud SQL instance of Postgres.
+    """Initializes a Unix socket connection pool for a Cloud SQL instance of MySQL."""
 
-    Uses the Cloud SQL Python Connector package.
-    """
     # Note: Saving credentials in environment variables is convenient, but not
     # secure - consider a more secure solution such as
     # Cloud Secret Manager (https://cloud.google.com/secret-manager) to help
@@ -63,31 +61,15 @@ def connect_with_connector(config) -> sqlalchemy.engine.base.Engine:
 
     instance_connection_name = payload['INSTANCE_CONNECTION_NAME']
 
-    ip_type = IPTypes.PUBLIC
-
-    # initialize Cloud SQL Python Connector object
-    # only works with pg8000 driver
-    connector = Connector(refresh_strategy="lazy")
-
-    def getconn() -> pg8000.dbapi.Connection:
-        conn: pg8000.dbapi.Connection = connector.connect(
-            instance_connection_name,
-            "pg8000",
-            user=db_user,
-            password=db_pass,
-            db=db_name,
-            ip_type=ip_type,
-        )
-        return conn
-
-    # The Cloud SQL Python Connector can be used with SQLAlchemy
-    # using the 'creator' argument to 'create_engine'
-
     try:
         pool = sqlalchemy.create_engine(
-            "postgresql+pg8000://",
-            creator=getconn,
-            # ...
+            URL.create(
+                drivername="postgresql+psycopg2",
+                username=db_user,
+                password=db_pass,
+                database=db_name,
+                host=f"/cloudsql/{instance_connection_name}",
+            ),
         )
     except OperationalError as err:
         raise err
@@ -98,7 +80,7 @@ def connect_with_connector(config) -> sqlalchemy.engine.base.Engine:
 if env == "dev":  # dev
     Session = sessionmaker(bind=connect_without_connector(config=dotenv_values(f'./conf/dev.env')))
 else:  # prod
-    Session = sessionmaker(bind=connect_with_connector(config=dotenv_values(f'./conf/prod.env')))
+    Session = sessionmaker(bind=connect_unix_socket(config=dotenv_values(f'./conf/prod.env')))
 
 session = Session()
 Base = sqlalchemy.orm.declarative_base()
