@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 from model.data import Hike, Journey, Zone, Trail, Viewpoint
 from model.db import session
-from sqlalchemy.orm import noload
+from sqlalchemy.orm import noload, lazyload, joinedload
 from sqlalchemy.exc import DataError, IntegrityError, OperationalError, SQLAlchemyError
 import json
 
@@ -79,29 +79,32 @@ def get_current_user():
 
 
 @app.route('/zones/<zone_name>')
-def get_zone_by_name(zone_name):
+def get_zone(zone_name):
     zone = session.query(Zone).filter_by(name=zone_name).first()
     return zone.__repr__(), 200
 
 
 @app.route('/zones/count')
-def get_zones_hikes_count():
-    response = {}
+def get_zone_hikes_count():
+    output = {}
     for zone in range(1, session.query(Zone).count() + 1):
         count = session.query(Hike).join(Zone, Zone.id == Hike.zone_id).filter(Zone.id == zone).count()
-        response[zone] = count
-    return jsonify(response), 200
+        output[zone] = count
+    return jsonify(output), 200
 
 
-@app.route('/hikes/<int:hike_id>')
+@app.route('/hikes/<int:zone_id>')
+def get_hikes(zone_id):
+    output = []
+    hikes = session.query(Hike).options(noload(Hike.trail)).filter_by(zone_id=zone_id).all()
+    for hike in hikes:
+        output.append(hike.__repr__())
+    return jsonify(output), 200
+
+
+@app.route('/hikes/only/<int:hike_id>')
 def get_hike(hike_id):
     hike = session.get(Hike, hike_id, options=[noload(Hike.trail)])
-    return hike.__repr__(), 200
-
-
-@app.route('/hikes/latest')
-def get_latest_hike():
-    hike = session.query(Hike).order_by(Hike.id.desc()).first()
     return hike.__repr__(), 200
 
 
