@@ -43,7 +43,7 @@ class Journey(Base):
     id: int = Column(Integer, primary_key=True)
     name: str = Column(String)
 
-    hikes = relationship('Hike', back_populates='journey', lazy='noload')
+    hikes = relationship('Hike', back_populates='journey')
 
     def __repr__(self):
         return {
@@ -59,7 +59,7 @@ class Trail(Base):
     id: int = Column(Integer, primary_key=True)
     gpx: WKBElement = Column(Geography(geometry_type="LINESTRING", srid=4326))
 
-    hikes = relationship('Hike', back_populates='trail', lazy='noload')
+    hikes = relationship('Hike', back_populates='trail')
 
     def __repr__(self):
         geojson = self.define_geojson()
@@ -114,6 +114,9 @@ class Hike(Base):
     zone_id = Column(Integer, ForeignKey('zones.id'), unique=False, nullable=False)
     zone = relationship("Zone", back_populates="hikes")
 
+    region_id = Column(Integer, ForeignKey('regions.id'), unique=False, nullable=False)
+    region = relationship("Region", back_populates="hikes")
+
     trail_id = Column(Integer, ForeignKey('trails.id'), unique=False, nullable=True)
     trail = relationship("Trail", back_populates="hikes")
 
@@ -140,6 +143,7 @@ class Hike(Base):
             "journey": self.journey,
             "description": self.description,
             "trail": self.trail.__repr__(),
+            "region": self.region.__repr__(),
         }
 
     def get_geojson_elevation(self):
@@ -174,6 +178,26 @@ class Viewpoint(Base):
 
     zone_id = Column(Integer, ForeignKey('zones.id'), unique=False, nullable=False)
     zone = relationship("Zone", back_populates="viewpoints")
+
+    def __repr__(self):
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "lat": str(to_shape(self.location).x),
+            "lng": str(to_shape(self.location).y)
+        }
+
+
+@dataclass
+class Region(Base):
+    __tablename__ = 'regions'
+
+    id: int = Column(Integer, primary_key=True)
+    name: str = Column(String)
+    location: WKBElement = Column(Geography(geometry_type="POINT", srid=4326))
+
+    hikes = relationship('Hike', back_populates='region')
 
     def __repr__(self):
 
