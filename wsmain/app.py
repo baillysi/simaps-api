@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from model.data import Hike, Journey, Zone, Trail, Viewpoint
+from model.data import Hike, Journey, Zone, Trail, Viewpoint, Region
 from model.db import session
 from sqlalchemy.orm import noload, lazyload, joinedload
 from sqlalchemy.exc import DataError, IntegrityError, OperationalError, SQLAlchemyError
@@ -82,6 +82,16 @@ def get_current_user():
 def get_zone(zone_name):
     zone = session.query(Zone).filter_by(name=zone_name).first()
     return zone.__repr__(), 200
+
+
+@app.route('/regions/<zone_name>')
+def get_regions(zone_name):
+    output = []
+    regions = (session.query(Region).join(Hike, Hike.region_id == Region.id).join(Zone, Zone.id == Hike.zone_id)
+               .filter(Zone.name == zone_name).all())
+    for hike in regions:
+        output.append(hike.__repr__())
+    return jsonify(output), 200
 
 
 @app.route('/zones/count')
