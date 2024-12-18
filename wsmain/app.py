@@ -85,10 +85,10 @@ def get_zone(zone_name):
 
 
 @app.route('/regions/<zone_name>')
-def get_regions(zone_name):
+def get_regions_by_zone(zone_name):
     output = []
     regions = (session.query(Region).join(Hike, Hike.region_id == Region.id).join(Zone, Zone.id == Hike.zone_id)
-               .filter(Zone.name == zone_name).all())
+               .filter(Zone.name == zone_name).filter(Hike.trail_id.isnot(None)).all())
     for hike in regions:
         output.append(hike.__repr__())
     return jsonify(output), 200
@@ -133,6 +133,7 @@ def add_hike():
         description=request.json['description'],
     )
     new_hike.journey_id = request.json['journey']['id']
+    new_hike.region_id = request.json['region']['id']
     new_hike.zone_id = request.json['zone_id']
 
     try:
@@ -159,6 +160,7 @@ def update_hike(hike_id):
         hike.difficulty = request.json['difficulty']
         hike.duration = request.json['duration']
         hike.journey_id = request.json['journey']['id']
+        hike.region_id = request.json['region']['id']
         hike.rates = request.json['rates']
         hike.description = request.json['description']
     except SQLAlchemyError as err:
@@ -190,6 +192,12 @@ def delete_hike(hike_id):
 def get_journeys():
     journeys = session.query(Journey).all()
     return jsonify(journeys), 200
+
+
+@app.route('/regions')
+def get_regions():
+    regions = session.query(Region).all()
+    return jsonify(regions), 200
 
 
 @app.route('/trail')

@@ -150,9 +150,9 @@ class Hike(Base):
         if self.trail:
             coordinates = get_coordinates(to_shape(self.trail.gpx), include_z=True).tolist()
             total_elevation = 0
-            for x in range(0, len(coordinates) - 100, 100):
-                if (coordinates[x + 100][2]) > (coordinates[x][2]):
-                    step = coordinates[x + 100][2] - coordinates[x][2]
+            for x in range(0, len(coordinates) - 10, 10):
+                if (coordinates[x + 10][2]) > (coordinates[x][2]):
+                    step = coordinates[x + 10][2] - coordinates[x][2]
                     total_elevation += step
         else:
             total_elevation = None
@@ -195,7 +195,6 @@ class Region(Base):
 
     id: int = Column(Integer, primary_key=True)
     name: str = Column(String)
-    location: WKBElement = Column(Geography(geometry_type="POINT", srid=4326))
 
     hikes = relationship('Hike', back_populates='region')
 
@@ -203,9 +202,7 @@ class Region(Base):
 
         return {
             "id": self.id,
-            "name": self.name,
-            "lat": str(to_shape(self.location).x),
-            "lng": str(to_shape(self.location).y)
+            "name": self.name
         }
 
 
