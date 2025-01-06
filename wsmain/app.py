@@ -94,27 +94,9 @@ def get_regions_by_zone(zone_name):
     return jsonify(output), 200
 
 
-@app.route('/zones/count')
-def get_zone_hikes_count():
-    output = {}
-    for zone in range(1, session.query(Zone).count() + 1):
-        count = session.query(Hike).join(Zone, Zone.id == Hike.zone_id).filter(Zone.id == zone).count()
-        output[zone] = count
-    return jsonify(output), 200
-
-
-@app.route('/hikes/<int:zone_id>')
-def get_hikes(zone_id):
-    output = []
-    hikes = session.query(Hike).options(noload(Hike.trail)).filter_by(zone_id=zone_id).all()
-    for hike in hikes:
-        output.append(hike.__repr__())
-    return jsonify(output), 200
-
-
-@app.route('/hikes/only/<int:hike_id>')
+@app.route('/hikes/<int:hike_id>')
 def get_hike(hike_id):
-    hike = session.get(Hike, hike_id, options=[noload(Hike.trail)])
+    hike = session.get(Hike, hike_id)
     return hike.__repr__(), 200
 
 
