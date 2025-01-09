@@ -1,7 +1,7 @@
 # coding=utf-8
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from model.data import Hike, Journey, Zone, Trail, Viewpoint, Region
+from model.data import Hike, Journey, Zone, Trail, Viewpoint, Region, Review
 from model.db import session
 from sqlalchemy.orm import noload, lazyload, joinedload
 from sqlalchemy.exc import DataError, IntegrityError, OperationalError, SQLAlchemyError
@@ -168,6 +168,39 @@ def delete_hike(hike_id):
     else:
         session.commit()
         return '', 204
+
+
+@app.route('/reviews')
+def get_reviews():
+    output = []
+    hike_id = request.args.get('hike_id')
+    reviews = (session.query(Review).join(Hike, Hike.id == Review.hike_id).filter(Hike.id == hike_id)
+               .options(noload(Review.hike)).all())
+    for review in reviews:
+        output.append(review.__repr__())
+    return jsonify(output), 200
+
+
+@app.route('/reviews', methods=['POST'])
+def add_review():
+    user = get_current_user()
+    if not user:
+        return '', 401
+    new_review = Review(
+        title=request.json['title'],
+        note=request.json['note'],
+        rate=request.json['rate'],
+    )
+    new_review.hike_id = request.json['hike_id']
+
+    try:
+        session.add(new_review)
+    except SQLAlchemyError as err:
+        session.rollback()
+        raise err
+    else:
+        session.commit()
+        return '', 201
 
 
 @app.route('/journeys')
