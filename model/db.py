@@ -70,6 +70,7 @@ def connect_unix_socket(config) -> sqlalchemy.engine.base.Engine:
                 database=db_name,
                 host=f"/cloudsql/{instance_connection_name}",
             ),
+            pool_pre_ping=True,
         )
     except OperationalError as err:
         raise err
