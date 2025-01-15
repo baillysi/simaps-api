@@ -120,6 +120,8 @@ class Hike(Base):
     trail_id = Column(Integer, ForeignKey('trails.id'), unique=False, nullable=True)
     trail = relationship("Trail", back_populates="hikes")
 
+    reviews = relationship('Review', back_populates='hike')
+
     def __repr__(self):
 
         if self.get_geojson_distance():
@@ -203,6 +205,31 @@ class Region(Base):
         return {
             "id": self.id,
             "name": self.name
+        }
+
+
+@dataclass
+class Review(Base):
+    __tablename__ = 'reviews'
+
+    id: int = Column(Integer, primary_key=True)
+    title: str = Column(String)
+    note: str = Column(String)
+    rate: int = Column(Integer)
+    created_at = Column(Date, default=dt.datetime.now())
+
+    hike_id = Column(Integer, ForeignKey('hikes.id'), unique=False, nullable=False)
+    hike = relationship("Hike", back_populates="reviews")
+
+    def __repr__(self):
+
+        return {
+            "id": self.id,
+            "title": self.title,
+            "note": self.note,
+            "rate": self.rate,
+            "created_at": self.created_at.strftime("%d/%m/%y"),
+            "hike": self.hike.__repr__()
         }
 
 
