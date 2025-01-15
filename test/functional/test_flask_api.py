@@ -10,7 +10,6 @@ payload = {
     'elevation': 500,
     'difficulty': 2,
     'duration': 5400,
-    'rates': 2,
     'description': 'hike_description',
     'zone_id': 1,
     'journey': {

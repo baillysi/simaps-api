@@ -104,7 +104,6 @@ class Hike(Base):
     elevation: int = Column(Integer)
     difficulty: int = Column(Integer)
     duration: int = Column(Integer)
-    rates: int = Column(Integer)
     description: str = Column(String)
     created_at = Column(Date, default=dt.datetime.now())
 
@@ -141,7 +140,6 @@ class Hike(Base):
             "elevation": elevation,
             "difficulty": self.difficulty,
             "duration": self.duration,
-            "rates": self.rates,
             "journey": self.journey,
             "description": self.description,
             "trail": self.trail.__repr__(),

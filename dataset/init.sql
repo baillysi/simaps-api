@@ -7,7 +7,6 @@ distance INTEGER,
 created_at DATE,
 zone_id INTEGER,
 gpx GEOGRAPHY,
-rates INTEGER,
 description VARCHAR,
 elevation INTEGER,
 difficulty INTEGER,
@@ -50,8 +49,8 @@ INSERT INTO zones (name, location) values
 ('est', ST_SetSRID(ST_MakePoint(-21.08870651252871, 55.614487810203116),4326)), -- takamaka
 ('ouest', ST_SetSRID(ST_MakePoint(-21.11611928787351, 55.42304040778952),4326)); -- grand bénare
  
-INSERT INTO hikes (name, distance, created_at, zone_id, gpx, rates, description, elevation, difficulty, journey_id, duration) values 
-('Canalisation des orangers', 12, CURRENT_DATE, 1, null, 2, 'Description', 500, 2, 2, 5);
+INSERT INTO hikes (name, distance, created_at, zone_id, gpx, description, elevation, difficulty, journey_id, duration) values
+('Canalisation des orangers', 12, CURRENT_DATE, 1, null, 'Description', 500, 2, 2, 5);
 
 
 

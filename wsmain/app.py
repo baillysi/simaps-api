@@ -111,7 +111,6 @@ def add_hike():
         elevation=request.json['elevation'],
         difficulty=request.json['difficulty'],
         duration=request.json['duration'],
-        rates=request.json['rates'],
         description=request.json['description'],
     )
     new_hike.journey_id = request.json['journey']['id']
@@ -143,7 +142,6 @@ def update_hike(hike_id):
         hike.duration = request.json['duration']
         hike.journey_id = request.json['journey']['id']
         hike.region_id = request.json['region']['id']
-        hike.rates = request.json['rates']
         hike.description = request.json['description']
     except SQLAlchemyError as err:
         session.rollback()
