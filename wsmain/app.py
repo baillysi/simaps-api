@@ -111,7 +111,6 @@ def add_hike():
         elevation=request.json['elevation'],
         difficulty=request.json['difficulty'],
         duration=request.json['duration'],
-        rates=request.json['rates'],
         description=request.json['description'],
     )
     new_hike.journey_id = request.json['journey']['id']
@@ -143,7 +142,6 @@ def update_hike(hike_id):
         hike.duration = request.json['duration']
         hike.journey_id = request.json['journey']['id']
         hike.region_id = request.json['region']['id']
-        hike.rates = request.json['rates']
         hike.description = request.json['description']
     except SQLAlchemyError as err:
         session.rollback()
@@ -222,10 +220,18 @@ def get_trail():
     return trail.__repr__(), 200
 
 
-@app.route('/viewpoints/<int:vp_id>')
-def get_viewpoint(vp_id):
-    viewpoint = session.get(Viewpoint, vp_id)
-    return viewpoint.__repr__(), 200
+@app.route('/viewpoints')
+def get_viewpoints():
+    output = []
+    hike_id = request.args.get('hike_id')
+    if not hike_id:
+        viewpoints = session.query(Viewpoint).all()
+    else:
+        viewpoints = (session.query(Viewpoint).join(Hike, Hike.id == Viewpoint.hike_id).filter(Hike.id == hike_id)
+                      .options(noload(Viewpoint.hike)).all())
+    for vp in viewpoints:
+        output.append(vp.__repr__())
+    return jsonify(output), 200
 
 
 if __name__ == "__main__":
