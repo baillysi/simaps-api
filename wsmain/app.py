@@ -190,6 +190,7 @@ def add_review():
         rate=request.json['rate'],
     )
     new_review.hike_id = request.json['hike_id']
+    new_review.is_validated = False
 
     try:
         session.add(new_review)
@@ -199,6 +200,23 @@ def add_review():
     else:
         session.commit()
         return '', 201
+
+
+@app.route('/reviews/<int:review_id>', methods=['PUT'])
+def update_review(review_id):
+    user = get_current_user()
+    if not user:
+        return '', 401
+    review = session.get(Review, review_id)
+
+    try:
+        review.is_validated = True
+    except SQLAlchemyError as err:
+        session.rollback()
+        raise err
+    else:
+        session.commit()
+        return '', 200
 
 
 @app.route('/journeys')
