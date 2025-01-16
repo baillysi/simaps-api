@@ -23,14 +23,12 @@ class Zone(Base):
     location: WKBElement = Column(Geography(geometry_type="POINT", srid=4326))
 
     hikes = relationship('Hike', back_populates='zone')
-    viewpoints = relationship('Viewpoint', back_populates='zone')
 
     def __repr__(self):
         return {
             "id": self.id,
             "name": self.name,
             "hikes": [hike.__repr__() for hike in self.hikes],
-            "viewpoints": [viewpoint.__repr__() for viewpoint in self.viewpoints],
             "lat": str(to_shape(self.location).x),
             "lng": str(to_shape(self.location).y)
         }
@@ -121,6 +119,8 @@ class Hike(Base):
 
     reviews = relationship('Review', back_populates='hike')
 
+    viewpoints = relationship('Viewpoint', back_populates='hike')
+
     def __repr__(self):
 
         if self.get_geojson_distance():
@@ -176,8 +176,8 @@ class Viewpoint(Base):
     created_at = Column(Date, default=dt.datetime.now())
     location: WKBElement = Column(Geography(geometry_type="POINT", srid=4326))
 
-    zone_id = Column(Integer, ForeignKey('zones.id'), unique=False, nullable=False)
-    zone = relationship("Zone", back_populates="viewpoints")
+    hike_id = Column(Integer, ForeignKey('hikes.id'), unique=False, nullable=False)
+    hike = relationship("Hike", back_populates="viewpoints")
 
     def __repr__(self):
 
