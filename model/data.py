@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from sqlalchemy import String, Integer, Date, Column, ForeignKey, Float
+from sqlalchemy import String, Integer, Date, Column, ForeignKey, Float, Boolean
 from sqlalchemy.orm import relationship
 import datetime as dt
 from dataclasses import dataclass
@@ -215,6 +215,7 @@ class Review(Base):
     note: str = Column(String)
     rate: int = Column(Integer)
     created_at = Column(Date, default=dt.datetime.now())
+    is_validated = Column(Boolean)
 
     hike_id = Column(Integer, ForeignKey('hikes.id'), unique=False, nullable=False)
     hike = relationship("Hike", back_populates="reviews")
@@ -227,6 +228,7 @@ class Review(Base):
             "note": self.note,
             "rate": self.rate,
             "created_at": self.created_at.strftime("%d/%m/%y"),
+            "is_validated": self.is_validated,
             "hike": self.hike.__repr__()
         }
 
