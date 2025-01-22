@@ -219,6 +219,23 @@ def update_review(review_id):
         return '', 200
 
 
+@app.route('/reviews/<int:review_id>', methods=['DELETE'])
+def delete_review(review_id):
+    user = get_current_user()
+    if not user:
+        return '', 401
+    review = session.get(Review, review_id)
+
+    try:
+        session.delete(review)
+    except SQLAlchemyError as err:
+        session.rollback()
+        raise err
+    else:
+        session.commit()
+        return '', 204
+
+
 @app.route('/journeys')
 def get_journeys():
     journeys = session.query(Journey).all()
