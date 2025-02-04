@@ -1,4 +1,6 @@
 # coding=utf-8
+import time
+
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from model.data import Hike, Journey, Zone, Trail, Viewpoint, Region, Review
@@ -80,7 +82,19 @@ def get_current_user():
 
 @app.route('/zones/<zone_name>')
 def get_zone(zone_name):
-    zone = session.query(Zone).filter_by(name=zone_name).first()
+    try:
+        zone = session.query(Zone).filter_by(name=zone_name).first()
+    except OperationalError:
+        # we sometimes loose connection with the database and have to reconnect
+        # This is the first db query we make, so attempt to reconnect, one time only
+        print("Lost connection to db - attempting to reconnect")
+        # sqlalchemy.exc.PendingRollbackError: Can't reconnect until invalid transaction is rolled back.
+        # (Background on this error at: https://sqlalche.me/e/14/8s2b)
+        session.rollback()
+        time.sleep(1)
+        session.begin()
+        zone = session.query(Zone).filter_by(name=zone_name).first()
+        print("Reconnected to db")
     return zone.__repr__(), 200
 
 
