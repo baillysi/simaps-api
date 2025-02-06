@@ -273,11 +273,28 @@ def get_trail():
 def get_viewpoints():
     output = []
     hike_id = request.args.get('hike_id')
-    if not hike_id:
-        viewpoints = session.query(Viewpoint).all()
-    else:
-        viewpoints = (session.query(Viewpoint).join(Hike, Hike.id == Viewpoint.hike_id).filter(Hike.id == hike_id)
-                      .options(noload(Viewpoint.hike)).all())
+    try:
+        if not hike_id:
+            viewpoints = session.query(Viewpoint).all()
+        else:
+            viewpoints = (session.query(Viewpoint).join(Hike, Hike.id == Viewpoint.hike_id).filter(Hike.id == hike_id)
+                          .options(noload(Viewpoint.hike)).all())
+    except OperationalError:
+        # we sometimes loose connection with the database and have to reconnect
+        # This is the first db query we make, so attempt to reconnect, one time only
+        print("Lost connection to db - attempting to reconnect")
+        # sqlalchemy.exc.PendingRollbackError: Can't reconnect until invalid transaction is rolled back.
+        # (Background on this error at: https://sqlalche.me/e/14/8s2b)
+        session.rollback()
+        time.sleep(1)
+        session.begin()
+        if not hike_id:
+            viewpoints = session.query(Viewpoint).all()
+        else:
+            viewpoints = (session.query(Viewpoint).join(Hike, Hike.id == Viewpoint.hike_id).filter(Hike.id == hike_id)
+                          .options(noload(Viewpoint.hike)).all())
+        print("Reconnected to db")
+        
     for vp in viewpoints:
         output.append(vp.__repr__())
     return jsonify(output), 200
