@@ -144,6 +144,7 @@ class Hike(Base):
             "description": self.description,
             "trail": self.trail.__repr__(),
             "region": self.region.__repr__(),
+            "zone": self.zone.name,
         }
 
     def get_geojson_elevation(self):
