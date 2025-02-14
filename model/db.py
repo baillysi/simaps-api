@@ -1,11 +1,9 @@
 # coding=utf-8
-import pg8000
 import sqlalchemy
 import json
 from sqlalchemy import URL
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
-from google.cloud.sql.connector import Connector, IPTypes
 from google.cloud import secretmanager
 from dotenv import dotenv_values
 from wsmain import env
@@ -71,6 +69,10 @@ def connect_unix_socket(config) -> sqlalchemy.engine.base.Engine:
                 host=f"/cloudsql/{instance_connection_name}",
             ),
             pool_pre_ping=True,
+            pool_size=10,
+            max_overflow=2,
+            pool_recycle=300,
+            pool_use_lifo=True,
         )
     except OperationalError as err:
         raise err
