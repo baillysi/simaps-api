@@ -68,8 +68,7 @@ def connect_unix_socket(config) -> sqlalchemy.engine.base.Engine:
                 database=db_name,
                 host=f"/cloudsql/{instance_connection_name}",
             ),
-            pool_pre_ping=True,
-            pool_recycle=3600,
+            poolclass=None,
         )
     except OperationalError as err:
         raise err
@@ -82,5 +81,4 @@ if env == "dev":  # dev
 else:  # prod
     Session = sessionmaker(bind=connect_unix_socket(config=dotenv_values(f'./conf/prod.env')))
 
-session = Session()
 Base = sqlalchemy.orm.declarative_base()
