@@ -4,9 +4,8 @@ import time
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from model.data import Hike, Journey, Zone, Trail, Viewpoint, Region, Review
-from model.db import session
-from sqlalchemy.orm import noload, lazyload, joinedload
-from sqlalchemy.exc import DataError, IntegrityError, OperationalError, SQLAlchemyError
+from model.db import Session
+from sqlalchemy.orm import noload
 import json
 
 from firebase_admin import initialize_app, credentials
@@ -82,36 +81,27 @@ def get_current_user():
 
 @app.route('/zones/<zone_name>')
 def get_zone(zone_name):
-    try:
+    with Session() as session:
         zone = session.query(Zone).filter_by(name=zone_name).first()
-    except OperationalError:
-        # we sometimes loose connection with the database and have to reconnect
-        # This is the first db query we make, so attempt to reconnect, one time only
-        print("Lost connection to db - attempting to reconnect")
-        # sqlalchemy.exc.PendingRollbackError: Can't reconnect until invalid transaction is rolled back.
-        # (Background on this error at: https://sqlalche.me/e/14/8s2b)
-        session.rollback()
-        time.sleep(1)
-        session.begin()
-        zone = session.query(Zone).filter_by(name=zone_name).first()
-        print("Reconnected to db")
-    return zone.__repr__(), 200
+        return zone.__repr__(), 200
 
 
 @app.route('/regions/<zone_name>')
 def get_regions_by_zone(zone_name):
     output = []
-    regions = (session.query(Region).join(Hike, Hike.region_id == Region.id).join(Zone, Zone.id == Hike.zone_id)
-               .filter(Zone.name == zone_name).filter(Hike.trail_id.isnot(None)).all())
-    for hike in regions:
-        output.append(hike.__repr__())
-    return jsonify(output), 200
+    with Session() as session:
+        regions = (session.query(Region).join(Hike, Hike.region_id == Region.id).join(Zone, Zone.id == Hike.zone_id)
+                   .filter(Zone.name == zone_name).filter(Hike.trail_id.isnot(None)).all())
+        for hike in regions:
+            output.append(hike.__repr__())
+        return jsonify(output), 200
 
 
 @app.route('/hikes/<int:hike_id>')
 def get_hike(hike_id):
-    hike = session.get(Hike, hike_id)
-    return hike.__repr__(), 200
+    with Session() as session:
+        hike = session.get(Hike, hike_id)
+        return hike.__repr__(), 200
 
 
 @app.route('/hikes', methods=['POST'])
@@ -131,12 +121,8 @@ def add_hike():
     new_hike.region_id = request.json['region']['id']
     new_hike.zone_id = request.json['zone_id']
 
-    try:
+    with Session() as session:
         session.add(new_hike)
-    except SQLAlchemyError as err:
-        session.rollback()
-        raise err
-    else:
         session.commit()
         return '', 201
 
@@ -146,9 +132,10 @@ def update_hike(hike_id):
     user = get_current_user()
     if not user:
         return '', 401
-    hike = session.get(Hike, hike_id)
 
-    try:
+    with Session() as session:
+        hike = session.get(Hike, hike_id)
+
         hike.name = request.json['name']
         hike.distance = request.json['distance']
         hike.elevation = request.json['elevation']
@@ -157,10 +144,7 @@ def update_hike(hike_id):
         hike.journey_id = request.json['journey']['id']
         hike.region_id = request.json['region']['id']
         hike.description = request.json['description']
-    except SQLAlchemyError as err:
-        session.rollback()
-        raise err
-    else:
+
         session.commit()
         return '', 200
 
@@ -170,14 +154,10 @@ def delete_hike(hike_id):
     user = get_current_user()
     if not user:
         return '', 401
-    hike = session.get(Hike, hike_id)
 
-    try:
+    with Session() as session:
+        hike = session.get(Hike, hike_id)
         session.delete(hike)
-    except SQLAlchemyError as err:
-        session.rollback()
-        raise err
-    else:
         session.commit()
         return '', 204
 
@@ -185,12 +165,13 @@ def delete_hike(hike_id):
 @app.route('/reviews')
 def get_reviews():
     output = []
-    hike_id = request.args.get('hike_id')
-    reviews = (session.query(Review).join(Hike, Hike.id == Review.hike_id).filter(Hike.id == hike_id)
-               .options(noload(Review.hike)).all())
-    for review in reviews:
-        output.append(review.__repr__())
-    return jsonify(output), 200
+    with Session() as session:
+        hike_id = request.args.get('hike_id')
+        reviews = (session.query(Review).join(Hike, Hike.id == Review.hike_id).filter(Hike.id == hike_id)
+                   .options(noload(Review.hike)).all())
+        for review in reviews:
+            output.append(review.__repr__())
+        return jsonify(output), 200
 
 
 @app.route('/reviews', methods=['POST'])
@@ -206,12 +187,8 @@ def add_review():
     new_review.hike_id = request.json['hike_id']
     new_review.is_validated = False
 
-    try:
+    with Session() as session:
         session.add(new_review)
-    except SQLAlchemyError as err:
-        session.rollback()
-        raise err
-    else:
         session.commit()
         return '', 201
 
@@ -221,14 +198,10 @@ def update_review(review_id):
     user = get_current_user()
     if not user:
         return '', 401
-    review = session.get(Review, review_id)
 
-    try:
+    with Session() as session:
+        review = session.get(Review, review_id)
         review.is_validated = True
-    except SQLAlchemyError as err:
-        session.rollback()
-        raise err
-    else:
         session.commit()
         return '', 200
 
@@ -238,66 +211,50 @@ def delete_review(review_id):
     user = get_current_user()
     if not user:
         return '', 401
-    review = session.get(Review, review_id)
 
-    try:
+    with Session() as session:
+        review = session.get(Review, review_id)
         session.delete(review)
-    except SQLAlchemyError as err:
-        session.rollback()
-        raise err
-    else:
         session.commit()
         return '', 204
 
 
 @app.route('/journeys')
 def get_journeys():
-    journeys = session.query(Journey).all()
-    return jsonify(journeys), 200
+    with Session() as session:
+        journeys = session.query(Journey).all()
+        return jsonify(journeys), 200
 
 
 @app.route('/regions')
 def get_regions():
-    regions = session.query(Region).all()
-    return jsonify(regions), 200
+    with Session() as session:
+        regions = session.query(Region).all()
+        return jsonify(regions), 200
 
 
 @app.route('/trail')
 def get_trail():
-    hike_id = request.args.get('hike_id')
-    trail = session.query(Trail).join(Hike, Hike.trail_id == Trail.id).filter(Hike.id == hike_id).one()
-    return trail.__repr__(), 200
+    with Session() as session:
+        hike_id = request.args.get('hike_id')
+        trail = session.query(Trail).join(Hike, Hike.trail_id == Trail.id).filter(Hike.id == hike_id).one()
+        return trail.__repr__(), 200
 
 
 @app.route('/viewpoints')
 def get_viewpoints():
     output = []
-    hike_id = request.args.get('hike_id')
-    try:
+    with Session() as session:
+        hike_id = request.args.get('hike_id')
         if not hike_id:
             viewpoints = session.query(Viewpoint).all()
         else:
             viewpoints = (session.query(Viewpoint).join(Hike, Hike.id == Viewpoint.hike_id).filter(Hike.id == hike_id)
                           .options(noload(Viewpoint.hike)).all())
-    except OperationalError:
-        # we sometimes loose connection with the database and have to reconnect
-        # This is the first db query we make, so attempt to reconnect, one time only
-        print("Lost connection to db - attempting to reconnect")
-        # sqlalchemy.exc.PendingRollbackError: Can't reconnect until invalid transaction is rolled back.
-        # (Background on this error at: https://sqlalche.me/e/14/8s2b)
-        session.rollback()
-        time.sleep(1)
-        session.begin()
-        if not hike_id:
-            viewpoints = session.query(Viewpoint).all()
-        else:
-            viewpoints = (session.query(Viewpoint).join(Hike, Hike.id == Viewpoint.hike_id).filter(Hike.id == hike_id)
-                          .options(noload(Viewpoint.hike)).all())
-        print("Reconnected to db")
-        
-    for vp in viewpoints:
-        output.append(vp.__repr__())
-    return jsonify(output), 200
+
+        for vp in viewpoints:
+            output.append(vp.__repr__())
+        return jsonify(output), 200
 
 
 if __name__ == "__main__":
