@@ -68,7 +68,13 @@ def connect_unix_socket(config) -> sqlalchemy.engine.base.Engine:
                 database=db_name,
                 host=f"/cloudsql/{instance_connection_name}",
             ),
-            poolclass=None,
+            pool_pre_ping=True,
+            connect_args={
+                "keepalives": 1,
+                "keepalives_idle": 30,
+                "keepalives_interval": 10,
+                "keepalives_count": 5,
+            }
         )
     except OperationalError as err:
         raise err
