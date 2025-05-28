@@ -12,3 +12,4 @@ SQLAlchemy==2.0.31
 gunicorn==23.0.0
 google-cloud-secret-manager
 google-api-core
+psycopg2-binary==2.9.9
