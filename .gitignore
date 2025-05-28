@@ -3,6 +3,7 @@
 __pycache__
 *.pyc
 !.gitignore
-conf/dev*
-!conf/dev.env.sample
+conf/dev.env
+conf/prod.env
 /temp
+ssl/*.pem
